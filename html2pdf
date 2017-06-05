@@ -1,0 +1,42 @@
+#! /bin/sh
+# depends of textlive-generic-recommended
+
+CUR_DIR=$(pwd)
+TEMP_DIR=$(mktemp -d)
+TEX_FILE="$TEMP_DIR/pageNumbers.tex"
+INPUT_FILE="$1"
+OUTPUT_FILE="${INPUT_FILE%.*}.pdf"
+NUM_PAGES=0
+PDF_FILE="$TEMP_DIR/pdf_temp.pdf"
+
+TEMP_FILE=$(tempfile -s .html)
+cat $INPUT_FILE > $TEMP_FILE
+wkhtmltopdf --ignore-load-errors $TEMP_FILE $PDF_FILE
+NUM_PAGES=$(pdftk $PDF_FILE dump_data | sed -n "/^NumberOfPages:/s%^.*:[[:blank:]]%%p")
+
+cat << EOF >"$TEX_FILE"
+\documentclass[12pt,a4paper]{article}
+\usepackage{multido}
+\usepackage[hmargin=.8cm,vmargin=.75cm,nohead,nofoot]{geometry}
+\begin{document}
+\multido{}{$NUM_PAGES}{\vphantom{x}\newpage}
+\end{document}
+EOF
+
+cd $TEMP_DIR
+pdflatex "$TEX_FILE"
+pdftk "$PDF_FILE" burst output "file_%03d.pdf"
+pdftk pageNumbers.pdf burst output number_%03d.pdf
+
+for i in $(seq -f %03g 1 $NUM_PAGES) ; do 
+	pdftk file_$i.pdf background number_$i.pdf output new-$i.pdf 
+done
+
+pdftk new-???.pdf output new.pdf
+
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$OUTPUT_FILE new.pdf
+
+cd $CUR_DIR
+#rm -f $TEMP_FILE
+#rm -fr $TEMP_DIR
+echo $TEMP_DIR
