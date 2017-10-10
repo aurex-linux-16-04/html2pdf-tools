@@ -1,5 +1,5 @@
 #! /bin/sh
-# depends of ghostscript pdftk wkhtmltopdf texlive-latex-base textlive-generic-recommended
+# depends of ghostscript pdftk wkhtmltopdf texlive-latex-base texlive-generic-recommended
 
 CUR_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
