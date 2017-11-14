@@ -32,7 +32,8 @@ DEST_DIR="$1"
 PM_DIR="/opt/processmaker/shared/sites/ausias_wf/files"
 echo "find . -type f -newermt $DATE1 ! -newermt $DATE2"
 list_files |while read g e d f; do
-	cp "$f" "$DEST_DIR/${g}_${e}_${d}.html"
+	D="$(echo "$d" |tr "+:" "_-")"
+	cp "$f" "$DEST_DIR/${g}_${e}_${D}.html"
 done
 
 #for f in $(find . -type f -newermt 2017-06-14 ! -newermt 2017-06-16 ) ; do cp "$f" /home/depinf/eval-final/ ; done
