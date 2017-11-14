@@ -46,6 +46,7 @@ CUR_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
 TEMP_FILE=$(tempfile -s .html)
 while [ "$1" ] ; do
+	cd $CUR_DIR
 	if [ -r "$1" ] ; then
 		do_pdf "$1"
 	else
