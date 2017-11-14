@@ -14,6 +14,11 @@ get_group(){
 	sed -ne "/>Grup<\/div>/,+1p" "$1" |tail -1 |sed -e "s%^.*>\(.\+\)<\/div.*$%\1%"
 }
 
+list_files(){
+	find $PM_DIR -type f -newermt $DATE1 ! -newermt $DATE2 -name "*doc" -printf "%A+ %p\n" |while read d f; do
+		echo "$(get_group "$f") Eval$(get_eval "$f") ${d} $f"
+	done
+}
 
 [ "$1" ] || usage
 DATE1="$1"
@@ -26,8 +31,8 @@ DEST_DIR="$1"
 [ -d "$DEST_DIR" ] || usage
 PM_DIR="/opt/processmaker/shared/sites/ausias_wf/files"
 echo "find . -type f -newermt $DATE1 ! -newermt $DATE2"
-find $PM_DIR -type f -newermt $DATE1 ! -newermt $DATE2 -name "*doc" |while read f; do
-	echo "$(get_group "$f")_Eval$(get_eval "$f") $f"
+list_files |while read g e d f; do
+	cp "$f" "$DEST_DIR/${g}_${e}_${d}.html"
 done
 
 #for f in $(find . -type f -newermt 2017-06-14 ! -newermt 2017-06-16 ) ; do cp "$f" /home/depinf/eval-final/ ; done
