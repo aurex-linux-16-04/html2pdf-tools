@@ -35,6 +35,8 @@ list_files |while read g e d f; do
 	D="$(echo "$d" |tr "+:" "_-")"
 	cp "$f" "$DEST_DIR/${g}_${e}_${D}.html"
 done
+# TODO: copy to temporary dir an do filter like this:
+# ls -lS *html |sed -e "s%^.* %%" |while read f; do g="$(echo "$f" |cut -d "_" -f1,2)"; if [ -r "good/$g.html" ] ; then cp "$f" "pruebas/$f" ; else cp "$f" "good/$g.html" ; fi; done
 
 #for f in $(find . -type f -newermt 2017-06-14 ! -newermt 2017-06-16 ) ; do cp "$f" /home/depinf/eval-final/ ; done
 
