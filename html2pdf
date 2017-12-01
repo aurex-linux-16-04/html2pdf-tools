@@ -9,7 +9,7 @@ do_pdf(){
 	PDF_FILE="$TEMP_DIR/pdf_temp.pdf"
 
 	cat $INPUT_FILE > $TEMP_FILE
-	wkhtmltopdf --ignore-load-errors $TEMP_FILE $PDF_FILE
+	wkhtmltopdf $WK_OPTION $TEMP_FILE $PDF_FILE
 	NUM_PAGES=$(pdftk $PDF_FILE dump_data | sed -n "/^NumberOfPages:/s%^.*:[[:blank:]]%%p")
 
 	cat << EOF >"$TEX_FILE"
@@ -41,6 +41,23 @@ usage(){
 }
 
 [ "$1" ] || usage
+
+WK_VERSION_CURRENT="$(wkhtmltopdf -V |sed -e "s%^.*[[:blank:]]\+%%" |tr "." " ")"
+WK_VERSION_REFERENCE="0 12"
+WK_NEW=1
+n=1
+for vr in $WK_VERSION_REFERENCE ; do
+	vc="$(echo $WK_VERSION_CURRENT |cut -f $n -d " ")"
+	if [ -z "$vc" ] || [ $vc -lt $vr ] ; then
+		WK_NEW=""
+	fi
+	n="$(($n+1))"
+done
+if [ "$WK_NEW" ] ; then
+	WK_OPTION="--load-error-handling ignore"
+else
+	WK_OPTION="--ignore-load-errors"
+fi
 
 CUR_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
