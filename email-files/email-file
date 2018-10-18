@@ -1,0 +1,85 @@
+#!/bin/sh
+# common code ...
+die() {
+        echo "$1" >&2
+        exit 1
+}
+
+usage(){
+	die "Usage: $(basename "$0") PDF_DIR MSG_TXT SUBJECT"
+}
+
+user_confirmation(){
+        echo "WARNING!!!: $1"
+        echo "¿Do you want to proceed? (Write 'YES' in uppercase to continue)"
+        read a
+        [ "$a" = "YES" ] || die "Aborted due to user input"
+}
+
+get_from_db(){
+        DB_FIELD="$1"
+        DB_LOGIN="$2"
+        [ "$DB_LOGIN" ] || DB_LOGIN="$login"
+        mysql -N -B -e "use itaca; select $DB_FIELD from alumnos where login='$DB_LOGIN'"
+}
+
+get_login_names(){
+	GRUPO="$1"
+	SQL="use simple_itaca; SELECT login FROM grupoasiprof_pm WHERE grupo='$GRUPO';"
+	mysql $PROCESSMAKER -N -B -e "$SQL" |sort -u
+}
+
+get_profes(){
+	SQL="use simple_itaca; SELECT login FROM profesores_pm WHERE activo='1';"
+	mysql $PROCESSMAKER -N -B -e "$SQL" |sort -u
+
+}
+
+get_grupos(){
+	PROFE="$1"
+	SQL="use simple_itaca; SELECT grupo FROM grupoasiprof_pm WHERE login='$PROFE';"
+	mysql $PROCESSMAKER -N -B -e "$SQL" |sort -u
+
+}
+
+# basic tests
+[ "$(id -un)" = "depinf" ] || die "You must be depinf to run this script"
+
+# check configuration files
+[ -r $HOME/.my.cnf ] || die "Missing mysql configurarion in $HOME/.my.cnf"
+
+PDF_DIR="$1"
+
+[ "$1" ] || usage
+[ -d "$1" ] || die "$1 s not a directory"
+
+[ $(ls "$PDF_DIR/" |grep "^[[:digit:]][[:alpha:]]\{4\}_Eval.*\.pdf$" |wc -l) -gt 0 ] || die "There is no pdf files in directory"
+shift
+[ "$1" ] || usage
+MSG_TXT="$1"
+[ -s "$MSG_TXT" ] || die "Message file invalid"
+shift
+[ "$1" ] || usage
+SUBJECT="$*"
+
+PROCESSMAKER="-h 172.24.0.10"
+
+
+get_profes |while read profe; do
+	LISTA_GRUPOS="$(get_grupos "$profe")"
+	#echo "$profe: $LISTA_GRUPOS"
+	LISTA_PDF=""
+	for g in $LISTA_GRUPOS; do
+		LISTA_PDF="$LISTA_PDF $(ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null)"
+#		ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null
+	done
+	if ! echo "$LISTA_PDF" |grep -q "^[[:blank:]]*$" ; then
+		EMAIL_CMD="mutt -s "
+		for f in $LISTA_PDF; do
+
+		echo "$profe@ausiasmarch.net : $LISTA_PDF"
+	else
+		echo "$profe: SIN PDFs"
+	fi
+done
+
