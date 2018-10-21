@@ -15,7 +15,7 @@ get_group(){
 }
 
 list_files(){
-	find $PM_DIR -type f -newermt $DATE1 ! -newermt $DATE2 -name "*doc" -printf "%A+ %p\n" |while read d f; do
+	find $PM_DIR -type f -newermt $DATE1 ! -newermt $DATE2 -name "*doc" -printf "%T+ %p\n" |while read d f; do
 		echo "$(get_group "$f") Eval$(get_eval "$f") ${d} $f"
 	done
 }

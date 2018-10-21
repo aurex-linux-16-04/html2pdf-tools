@@ -1,0 +1,51 @@
+#!/bin/sh
+die(){
+        while [ "$1" ] ; do
+		echo "$1" >&2
+		shift
+        done
+        exit 1
+}
+
+usage(){
+        die "Usage: $(basename "$0") HTML_DIR"
+}
+
+gen_new_data(){
+	NEW_CONTENT="$1"
+	echo "<div class=\"cell\">$NEW_CONTENT</div>"
+}
+
+get_observacions(){
+	F="$(basename "$1")"
+	GRUPO="$(echo "$F" |sed -e "s%$FILE_NAME_REGEXP%\1%")"
+	FECHA="$(echo "$F" |sed -e "s%$FILE_NAME_REGEXP%\3%")"
+        SQL="use simple_itaca; SELECT TEXTAR_OBSERVACIONS FROM PMT_PMT_EVAL_INI WHERE DATE(datetime_jeval)='$FECHA' and DROP_GRUPO_CABECERA='$GRUPO';"
+        OBS="$(mysql -N -B -e "$SQL")"
+	if [ "$OBS" ] ; then
+		echo "$OBS" |while read l; do
+			if [ "$l" ] && [ "$l" != "NULL" ] ; then
+				echo "$l"
+				echo -n "<br />"
+			fi
+		done
+	fi
+}
+
+
+
+[ "$1" ] || [ ! -d "$1" ] || usage
+
+HTML_DIR="$1"
+FILE_NAME_REGEXP="^\([[:digit:]][[:alpha:]]\{4\}\)_\([[:alnum:]]\+\)_\([[:digit:]]\{4\}\-[[:digit:]]\{2\}\-[[:digit:]]\{2\}\)_.*\.html$"
+TITLE="Observacions/Ampliacions"
+EMPTY_DATA="<div class=\"cell\"></div>"
+for f in $(ls -1 "$HTML_DIR/" |grep "$FILE_NAME_REGEXP"); do
+	HTML_FILE="$HTML_DIR/$f"
+	DATA="$(get_observacions "$f" |tr -d "\n" |sed -e "s%<br />$%%")"
+	if [ "$DATA" ] ; then
+		NEW_DATA="$(gen_new_data "$DATA")"
+		sed -e "\%^<div class=\"cell\">${TITLE}</div>$%,\%^${EMPTY_DATA}$%{s%^${EMPTY_DATA}$%${NEW_DATA}%}" $HTML_FILE > ${HTML_FILE}.NEW
+	fi
+done
+
