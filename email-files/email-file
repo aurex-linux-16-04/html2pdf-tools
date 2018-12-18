@@ -37,7 +37,7 @@ get_profes(){
 	mysql $PROCESSMAKER -N -B -e "$SQL" |sort -u
 #	for l in svillanuevag lgarciag; do echo $l; done
 #	for l in svillanuevag; do echo $l; done
-#	cat lista-pendientes
+#	cat lista_pendientes.txt
 
 }
 
