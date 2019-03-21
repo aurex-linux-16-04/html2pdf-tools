@@ -34,10 +34,10 @@ get_login_names(){
 
 get_profes(){
 	SQL="use simple_itaca; SELECT login FROM profesores_pm WHERE activo='1';"
-#	mysql $PROCESSMAKER -N -B -e "$SQL" |sort -u
+	mysql $PROCESSMAKER -N -B -e "$SQL" |sort -u
 #	for l in svillanuevag lgarciag; do echo $l; done
 #	for l in svillanuevag; do echo $l; done
-	cat lista-pendientes
+#	cat lista_pendientes.txt
 
 }
 
@@ -126,7 +126,7 @@ if user_confirmation $PROF_TXT; then
 			LISTA_PDF="$LISTA_PDF $(ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null)"
 		done
 		if ! echo "$LISTA_PDF" |grep -q "^[[:blank:]]*$" ; then
-			send_mail "$sprofe" "$SUBJECT" "$PROF_TXT" $LISTA_PDF
+			send_mail "$profe" "$SUBJECT" "$PROF_TXT" $LISTA_PDF
 		fi
 	done
 fi
