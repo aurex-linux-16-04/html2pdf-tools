@@ -1,0 +1,15 @@
+#!/bin/sh
+
+usage(){
+	echo "Usage: $(basename "$0") DIRECTORY_NAME" >&2
+	exit 1
+}
+
+if [ -z "$1" ] ; then
+	usage
+fi
+DIRNAME="$1"
+if [ ! -d $DIRNAME ] ; then
+	usage
+fi
+(cd $DIRNAME; for f in $(ls -1 *pdf |cut -f 1 -d _|sort -u ) ; do if [ $(ls -1 *pdf |cut -f 1 -d _ |grep "$f"|wc -l) -gt 1 ]; then echo "$f"; fi ; done)
