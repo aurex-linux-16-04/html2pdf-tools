@@ -120,8 +120,48 @@ shift
 SUBJECT=$*
 
 PROCESSMAKER="-h 172.24.0.10"
-LISTA_FAM="SAN,capsan COM,capcom ADM,capadm INF,capinf"
+LISTA_FAM="SAN,capsan,capori COM,capcom,capori ADM,capadm,capori INF,capinf,capori"
 LISTA_DIR="capestudis"
+
+if user_confirmation $DIRE_TXT; then
+	TMP_DIR="$(mktemp -d)"
+	LISTA_PDF=""
+	for g in $(get_all_grupos); do
+		LISTA_PDF="$LISTA_PDF $(ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null)"
+	done
+	for i in $LISTA_DIR; do
+		DIRE="$i"
+		if ! echo "$LISTA_PDF" |grep -q "^[[:blank:]]*$" ; then
+			ZIP_FILE="$TMP_DIR/actas_eval_$(date "+%m-%Y").zip"
+			zip -r -j $ZIP_FILE $LISTA_PDF >/dev/null
+			send_mail "$DIRE" "$SUBJECT" "$DIRE_TXT" "$ZIP_FILE"
+		fi
+	done
+	rm -fr "$TMP_DIR"
+fi
+
+if user_confirmation $JDEP_TXT; then
+
+	TMP_DIR="$(mktemp -d)"
+
+	for i in $LISTA_FAM; do
+		FAMILIA=${i%,*}
+		JDEP_LIST=${i#*,}
+		echo $FAMILIA $JDEP
+		LISTA_PDF=""
+		for g in $(get_group_by_fam $FAMILIA); do
+			LISTA_PDF="$LISTA_PDF $(ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null)"
+		done
+		if ! echo "$LISTA_PDF" |grep -q "^[[:blank:]]*$" ; then
+			ZIP_FILE="$TMP_DIR/actas_eval_$FAMILIA_$(date "+%m-%Y").zip"
+			zip -r -j $ZIP_FILE $LISTA_PDF >/dev/null
+			for JDEP in $(echo "$JDEP_LIST" |tr "," " ") ; do
+				send_mail "$JDEP" "$SUBJECT" "$JDEP_TXT" "$ZIP_FILE"
+			done
+		fi
+	done
+	rm -fr "$TMP_DIR"
+fi
 
 if user_confirmation $PROF_TXT; then
 	get_profes |while read profe; do
@@ -137,42 +177,6 @@ if user_confirmation $PROF_TXT; then
 	done
 fi
 
-if user_confirmation $JDEP_TXT; then
 
-	TMP_DIR="$(mktemp -d)"
 
-	for i in $LISTA_FAM; do
-		FAMILIA=${i%,*}
-		JDEP=${i#*,}
-		echo $FAMILIA $JDEP
-		LISTA_PDF=""
-		for g in $(get_group_by_fam $FAMILIA); do
-			LISTA_PDF="$LISTA_PDF $(ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null)"
-		done
-		if ! echo "$LISTA_PDF" |grep -q "^[[:blank:]]*$" ; then
-			ZIP_FILE="$TMP_DIR/actas_eval_$FAMILIA_$(date "+%m-%Y").zip"
-			zip -r -j $ZIP_FILE $LISTA_PDF >/dev/null
-			send_mail "$JDEP" "$SUBJECT" "$JDEP_TXT" "$ZIP_FILE"
-		fi
-	done
-	rm -fr "$TMP_DIR"
-fi
-
-#TODO: falta hacer el bloque de los jefes de estudios
-
-if user_confirmation $DIRE_TXT; then
-
-	TMP_DIR="$(mktemp -d)"
-	DIRE="capestudis"
-	LISTA_PDF=""
-	for g in $(get_all_grupos); do
-		LISTA_PDF="$LISTA_PDF $(ls -1 $PDF_DIR/${g}_Eval*.pdf 2>/dev/null)"
-	done
-	if ! echo "$LISTA_PDF" |grep -q "^[[:blank:]]*$" ; then
-		ZIP_FILE="$TMP_DIR/actas_eval_$(date "+%m-%Y").zip"
-		zip -r -j $ZIP_FILE $LISTA_PDF >/dev/null
-		send_mail "$DIRE" "$SUBJECT" "$DIRE_TXT" "$ZIP_FILE"
-	fi
-	rm -fr "$TMP_DIR"
-fi
 
