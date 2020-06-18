@@ -1,0 +1,40 @@
+#! /bin/sh
+# depends of ghostscript pdftk wkhtmltopdf texlive-latex-base textlive-generic-recommended
+
+usage(){
+	echo "Usage: $(basename "$0") eval OUTPUT_DIR" >&2
+	exit 1
+}
+
+list_files(){
+	$MYSQL "select grupo,coord from actas_eval where coord<>'' and eval='$EVAL' and curso='$CURSO';"
+}
+
+get_field_acta(){
+	FIELDNAME="$1"
+	$MYSQL "select $FIELDNAME from actas_eval where coord='$TUTOR' and eval='$EVAL' and curso='$CURSO' and grupo='$GRUPO';"
+}
+
+# main
+# ----
+MYSQL="mysql simple_itaca -sN -e "
+CURSO="2019"
+TEMPLATES_DIR="./generate-html-files"
+[ -d "$TEMPLATES_DIR" ] || usage
+
+
+[ "$1" ] || usage
+EVAL="$1"
+shift
+[ "$1" ] || usage
+DEST_DIR="$1"
+[ -d "$DEST_DIR" ] || usage
+
+cp $TEMPLATES_DIR/*png $DEST_DIR/
+list_files |while read GRUPO TUTOR; do
+	DEST_FILE="${GRUPO}_${EVAL}.html"
+done
+# TODO: copy to temporary dir an do filter like this:
+# ls -lS *html |sed -e "s%^.* %%" |while read f; do g="$(echo "$f" |cut -d "_" -f1,2)"; if [ -r "good/$g.html" ] ; then cp "$f" "pruebas/$f" ; else cp "$f" "good/$g.html" ; fi; done
+
+#for f in $(find . -type f -newermt 2017-06-14 ! -newermt 2017-06-16 ) ; do cp "$f" /home/depinf/eval-final/ ; done
