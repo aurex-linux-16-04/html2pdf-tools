@@ -1,3 +1,4 @@
+cat <<EOF
 <html xmlns:v="urn:schemas-microsoft-com:vml"
             xmlns:o="urn:schemas-microsoft-com:office:office"
             xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -192,13 +193,13 @@
 <div class="cell title little">Família</div>
 <div class="cell">${FAMILIA}</div>
 <div class="cell title little">Curs</div>
-<div class="cell">${CURSO}</div>
+<div class="cell">${CURSOGRUPO}</div>
 </div>
 <div class="row">
 <div class="cell title little">Grup</div>
 <div class="cell">${GRUPO}</div>
 <div class="cell title little">Tutor/a:</div>
-<div class="cell">${TUTOR}</div>
+<div class="cell">${CORDINADOR}</div>
 </div>
 </div>
 </div>
@@ -211,11 +212,11 @@
 <div class="table">
 <div class="row">
 <div class="cell title large">Hi assisteixen representants del grup:</div>
-<div class="cell">${REPRESEN}</div>
+<div class="cell">${REPRESENT}</div>
 </div>
 <div class="row">
 <div class="cell title large">En general, s&rsquo;han pogut complir els acords de l´última Junta d&rsquo;Avaluació:</div>
-<div class="cell">${ACUERDOS}</div>
+<div class="cell">${PROP_ANT}</div>
 </div>
 </div>
 <div class="table">
@@ -223,7 +224,7 @@
 <div class="cell">VALORACIONS I PROPOSTES DELS REPRÉSENTANTS DEL GRUP:</div>
 </div>
 <div class="row">
-	<div class="cell">${VAL_REPR}</div>
+	<div class="cell">${VALOR_REPRESENT}</div>
 </div>
 </div>
 <div class="table">
@@ -231,7 +232,7 @@
 <div class="cell">VALORACIONS GENERALS DEL GRUP PER PART DE L'EQUIP EDUCATIU:</div>
 </div>
 <div class="row">
-	<div class="cell">${VAL_EQUIPO}</div>
+	<div class="cell">${VALOR_EQUIPO}</div>
 </div>
 </div>
 <div class="table">
@@ -262,7 +263,7 @@
 <div class="cell">ACORDS, GENERALS I/O PARTICULARS, DE LA JUNTA D&rsquo;AVALUACIÓ:</div>
 </div>
 <div class="row">
-	<div class="cell">${ACUERDOS}</div>
+	<div class="cell">${PROP_GENERAL}</div>
 </div>
 </div>
 <div class="table">
@@ -270,7 +271,7 @@
 <div class="cell">OBSERVACIONS/AMPLIACIONS</div>
 </div>
 <div class="row">
-<div class="cell">${OBSERV}</div>
+<div class="cell">${OBSERVACIONES}</div>
 </div>
 </div>
 </div>
@@ -330,4 +331,5 @@
 <div class="cell center grid">Motius de disconformitat</div>
 </div>
 </th></tr>
+EOF
 

@@ -1,13 +1,35 @@
 #! /bin/sh
 # depends of ghostscript pdftk wkhtmltopdf texlive-latex-base textlive-generic-recommended
 
-usage(){
-	echo "Usage: $(basename "$0") eval OUTPUT_DIR" >&2
+die(){
+	echo "$1" >&2
 	exit 1
+}
+
+usage(){
+	die "Usage: $(basename "$0") eval OUTPUT_DIR"
+}
+
+int2bool(){
+	tr "01" "NS"
 }
 
 list_files(){
 	$MYSQL "select grupo,coord from actas_eval where coord<>'' and eval='$EVAL' and curso='$CURSO';"
+}
+
+list_firmas(){
+	$MYSQL "select login,asigcod,conf,asist,motivos from actas_eval_firmas where eval='$EVAL' and curso='$CURSO' and grupo='$GRUPO';"
+}
+
+get_field_asi(){
+	FIELDNAME="$1"
+	$MYSQL "select $FIELDNAME from grupoasiprof_pm where grupo='$GRUPO' and asigcod='$MODULO' and login='$PROFE';"
+}
+
+get_field_grupo(){
+	FIELDNAME="$1"
+	$MYSQL "select $FIELDNAME from grupos_pm where codigo='$GRUPO';"
 }
 
 get_field_acta(){
@@ -15,12 +37,38 @@ get_field_acta(){
 	$MYSQL "select $FIELDNAME from actas_eval where coord='$TUTOR' and eval='$EVAL' and curso='$CURSO' and grupo='$GRUPO';"
 }
 
+get_profe(){
+	$MYSQL "select CONCAT(nombre, ' ', apellido1, ' ', apellido2) from profesores_pm where login='$1';"
+}
+
+expand_head() {
+	. $TEMPLATES_DIR/acta-head
+}
+
+expand_bottom() {
+	. $TEMPLATES_DIR/acta-bottom
+}
+
+expand_grid() {
+	list_firmas |while read pro mod conf asist mot ; do
+		MODULO="$mod"
+		PROFE="$pro"
+		CONFORME="$(echo "$conf" |int2bool)"
+		ASISTE="$(echo "$asist" |int2bool)"
+		MOTIVOS="$mot"
+		MODULO_DESC="$(get_field_asi "asignatura")"
+		PROFESOR="$(get_field_asi "CONCAT(nombre, ' ', apellido1, ' ', apellido2)" )"
+		. $TEMPLATES_DIR/acta-grid
+	done
+}
+
+
 # main
 # ----
 MYSQL="mysql simple_itaca -sN -e "
 CURSO="2019"
 TEMPLATES_DIR="./generate-html-files"
-[ -d "$TEMPLATES_DIR" ] || usage
+[ -d "$TEMPLATES_DIR" ] || die "Unable to find $TEMPLATES_DIR directory"
 
 
 [ "$1" ] || usage
@@ -30,11 +78,27 @@ shift
 DEST_DIR="$1"
 [ -d "$DEST_DIR" ] || usage
 
+
+
+
 cp $TEMPLATES_DIR/*png $DEST_DIR/
 list_files |while read GRUPO TUTOR; do
-	DEST_FILE="${GRUPO}_${EVAL}.html"
+	DEST_FILE="$DEST_DIR/${GRUPO}_${EVAL}.html"
+	echo "$DEST_FILE"
+	REPRESENT="$(get_field_acta "represent" |int2bool)"
+	PROP_ANT="$(get_field_acta "prop_ant" |int2bool)"
+	VALOR_REPRESENT="$(get_field_acta "valor_represent")"
+	VALOR_EQUIPO="$(get_field_acta "valor_equipo")"
+	CONS_MODULO="$(get_field_acta "cons_modulo")"
+	CONS_ALUMNO="$(get_field_acta "cons_alumno")"
+	PROP_GENERAL="$(get_field_acta "prop_general")"
+	OBSERVACIONES="$(get_field_acta "observaciones")"
+	COORDINADOR="$(get_profe "$TUTOR")"
+	CURSOGRUPO="$(get_field_grupo "curso")"
+	FAMILIA="$(get_field_grupo "familia")"
+	
+	expand_head > "$DEST_FILE"
+	expand_grid >> "$DEST_FILE"
+	expand_bottom >> "$DEST_FILE"
+	
 done
-# TODO: copy to temporary dir an do filter like this:
-# ls -lS *html |sed -e "s%^.* %%" |while read f; do g="$(echo "$f" |cut -d "_" -f1,2)"; if [ -r "good/$g.html" ] ; then cp "$f" "pruebas/$f" ; else cp "$f" "good/$g.html" ; fi; done
-
-#for f in $(find . -type f -newermt 2017-06-14 ! -newermt 2017-06-16 ) ; do cp "$f" /home/depinf/eval-final/ ; done

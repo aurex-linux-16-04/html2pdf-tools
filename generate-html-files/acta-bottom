@@ -1,4 +1,4 @@
-
+cat << EOF
 </tbody>
 </table>
 </div>
@@ -6,4 +6,4 @@
 </body>
 </html>
 </div></body></html>
-
+EOF
